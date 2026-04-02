@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  username   String
+  avatar     String?
+  provider   String
+  googleId   String?  @unique
+  facebookId String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastSeen   DateTime @default(now())
+
+  workspaces       WorkspaceMember[]
+  messages         Message[]
+  reactions        Reaction[]
+  sentMessages     DirectMessage[]  @relation("SentMessages")
+  receivedMessages DirectMessage[]  @relation("ReceivedMessages")
+  sentRequests     FriendRequest[]  @relation("SentRequests")
+  receivedRequests FriendRequest[]  @relation("ReceivedRequests")
+  blockedBy        Block[]          @relation("BlockedBy")
+  blocking         Block[]          @relation("Blocking")
+  workspaceBans    WorkspaceBan[]
+  replies          Reply[]
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  inviteCode  String   @unique @default(uuid())
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members  WorkspaceMember[]
+  channels Channel[]
+  bans     WorkspaceBan[]
+  roles    WorkspaceRole[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  role        String   @default("MEMBER")
+  roleId      String?
+  joinedAt    DateTime @default(now())
+
+  userId      String
+  workspaceId String
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceRole WorkspaceRole? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, workspaceId])
+}
+
+model WorkspaceRole {
+  id          String   @id @default(uuid())
+  name        String
+  color       String   @default("#6B7399")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  workspaceId String
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     WorkspaceMember[]
+}
+
+model Channel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@unique([name, workspaceId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  fileUrl   String?
+  fileType  String?
+  deleted   Boolean  @default(false)
+  pinned    Boolean  @default(false)
+  replyTo   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  channelId String
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel   Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+  thread    Thread?
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  createdAt DateTime @default(now())
+
+  userId    String
+  messageId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId, emoji])
+}
+
+model DirectMessage {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  fileUrl   String?
+  fileType  String?
+  deleted   Boolean  @default(false)
+  edited    Boolean  @default(false)
+  pinned    Boolean  @default(false)
+  replyTo   Json?
+  reactions Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  senderId   String
+  receiverId String
+
+  sender   User @relation("SentMessages",   fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+model FriendRequest {
+  id        String   @id @default(uuid())
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+
+  senderId   String
+  receiverId String
+
+  sender   User @relation("SentRequests",   fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  blockerId String
+  blockedId String
+
+  blocker User @relation("BlockedBy", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocking",  fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+}
+
+model WorkspaceBan {
+  id        String   @id @default(uuid())
+  reason    String?
+  createdAt DateTime @default(now())
+
+  userId      String
+  workspaceId String
+
+  user      User      @relation(fields: [userId],      references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Thread {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  messageId String  @unique
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  replies   Reply[]
+}
+
+model Reply {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  fileUrl   String?
+  fileType  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  threadId String
+  userId   String
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+}

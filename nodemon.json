@@ -1,0 +1,5 @@
+{
+  "watch": ["src"],
+  "ext": "js,ts",
+  "exec": "node --experimental-strip-types src/app.js"
+}
