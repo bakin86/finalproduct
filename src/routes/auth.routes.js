@@ -16,5 +16,6 @@ router.get("/me", protect, me);
 router.patch("/profile", protect, updateProfile);
 router.post("/avatar", protect, upload.single("avatar"), updateAvatar);
 router.get("/search", protect, searchUsers);
+router.get("/user/:id", protect, getUserById);
 
 export default router;
