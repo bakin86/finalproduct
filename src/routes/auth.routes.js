@@ -5,6 +5,7 @@ import {
   updateProfile,
   updateAvatar,
   searchUsers,
+  getUserById,
 } from "../controllers/auth.controller.js";
 import { protect } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
