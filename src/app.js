@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { fileURLToPath } from "url";
@@ -30,10 +29,27 @@ const __dirname  = path.dirname(__filename);
 const app        = express();
 const httpServer = createServer(app);
 
+// ── CORS ─────────────────────────────────────────────────────────
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : ["http://localhost:5173", "http://localhost:3000"];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+  }
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
+
 // ── Rate Limiting ─────────────────────────────────────────────────
 const rateLimitMap = new Map();
 
-const rateLimit = (windowMs = 15 * 60 * 1000, max = 100) => (req, res, next) => {
+const rateLimit = (windowMs = 15 * 60 * 1000, max = 200) => (req, res, next) => {
   const ip  = req.ip || req.connection.remoteAddress;
   const now = Date.now();
   const record = rateLimitMap.get(ip) || { count: 0, start: now };
@@ -44,7 +60,6 @@ const rateLimit = (windowMs = 15 * 60 * 1000, max = 100) => (req, res, next) => 
   } else {
     record.count++;
   }
-
   rateLimitMap.set(ip, record);
 
   if (record.count > max) {
@@ -56,27 +71,7 @@ const rateLimit = (windowMs = 15 * 60 * 1000, max = 100) => (req, res, next) => 
   next();
 };
 
-// ── CORS ─────────────────────────────────────────────────────────
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
-  : ["http://localhost:5173", "http://localhost:3000"];
-
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
-      cb(null, true);
-    } else {
-      cb(new Error(`CORS blocked: ${origin}`));
-    }
-  },
-  credentials: true,
-}));
-
-// ── Rate limit apply ─────────────────────────────────────────────
-app.use(rateLimit(15 * 60 * 1000, 200)); // 15 минутад 200 request
-
-// Auth routes-д илүү хатуу хязгаар
-app.use("/api/auth", rateLimit(15 * 60 * 1000, 20));
+app.use(rateLimit(15 * 60 * 1000, 200));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
