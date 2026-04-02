@@ -30,8 +30,10 @@ const httpServer = createServer(app);
 
 // ── CORS ─────────────────────────────────────────────────────────
 app.use(cors({
-  origin: true,
-  credentials: true,
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
 }));
 
 app.use(express.json({ limit: "10mb" }));
