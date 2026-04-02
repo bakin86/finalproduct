@@ -234,3 +234,24 @@ export const searchUsers = async (req, res, next) => {
     next(err);
   }
 };
+//
+// 🔥 GET USER BY ID
+//
+export const getUserById = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        avatar: true,
+        provider: true,
+        createdAt: true,
+        lastSeen: true,
+      },
+    });
+    if (!user) return res.status(404).json({ ok: false, message: "User not found" });
+    res.json({ ok: true, data: user });
+  } catch (err) { next(err); }
+};
