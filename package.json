@@ -17,19 +17,18 @@
     "node": ">=20.19.0"
   },
   "dependencies": {
-    "@prisma/adapter-mariadb": "latest",
-    "@prisma/client":          "latest",
-    "cors":                    "^2.8.5",
-    "dotenv":                  "^16.4.5",
-    "express":                 "^4.19.2",
-    "google-auth-library":     "^10.6.2",
-    "jsonwebtoken":            "^9.0.2",
-    "mariadb":                 "^3.3.2",
-    "multer":                  "^1.4.5-lts.1",
-    "socket.io":               "^4.7.5"
+    "@prisma/client":      "^5.22.0",
+    "cors":                "^2.8.5",
+    "dotenv":              "^16.4.5",
+    "express":             "^4.19.2",
+    "google-auth-library": "^10.6.2",
+    "jsonwebtoken":        "^9.0.2",
+    "mariadb":             "^3.3.2",
+    "multer":              "^1.4.5-lts.1",
+    "socket.io":           "^4.7.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
-    "prisma":  "latest"
+    "prisma":  "^5.22.0"
   }
 }
