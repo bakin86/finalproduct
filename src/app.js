@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import { fileURLToPath } from "url";
 import path from "path";
-
 import authRoutes from "./routes/auth.routes.js";
 import workspaceRoutes from "./routes/workspace.routes.js";
 import channelRoutes from "./routes/channel.routes.js";
@@ -17,7 +16,6 @@ import blockRoutes from "./routes/block.routes.js";
 import banRoutes from "./routes/ban.routes.js";
 import roleRoutes from "./routes/role.routes.js";
 import threadRoutes from "./routes/thread.routes.js";
-
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFound } from "./middleware/notFound.js";
 import { initSocket } from "./socket/index.js";
@@ -31,19 +29,8 @@ const app = express();
 const httpServer = createServer(app);
 
 // ── CORS ─────────────────────────────────────────────────────────
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
-  : ["http://localhost:5173", "http://localhost:3000"];
-
 app.use(cors({
-  origin: (origin, cb) => {
-    // Allow no-origin (curl, mobile, server-to-server) or whitelisted origins
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
-      cb(null, true);
-    } else {
-      cb(new Error(`CORS blocked: ${origin}`));
-    }
-  },
+  origin: true,
   credentials: true,
 }));
 
